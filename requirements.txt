@@ -16,9 +16,9 @@ email-validator==2.1.0
 beautifulsoup4==4.12.2
 html2text==2020.1.16
 
-# Data processing
-pandas==2.1.4
-numpy==1.24.4
+# Data processing (temporarily removed due to Python 3.13 compatibility)
+# pandas==2.1.4
+# numpy==1.24.4
 
 # Security and environment
-cryptography==41.0.8
+cryptography>=42.0.0

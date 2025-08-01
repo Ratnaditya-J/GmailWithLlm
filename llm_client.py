@@ -17,10 +17,10 @@ class LLMClient:
     """LLM client for analyzing email data and generating insights."""
     
     def __init__(self):
-        """Initialize LLM client with secure credential handling."""
-        self.client = None
+        """Initialize LLM client with security-first defaults."""
+        self.client: Optional[OpenAI] = None
         self.api_key = None
-        self.model = "gpt-4"  # Default model
+        self.model = "gpt-3.5-turbo"  # More efficient model with better rate limits
         
     def authenticate(self, provider: str = "openai") -> bool:
         """
@@ -114,7 +114,7 @@ class LLMClient:
                     {"role": "system", "content": self._get_system_prompt()},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=2000,
+                max_tokens=1000,  # Reduced to prevent rate limits
                 temperature=0.7
             )
             
@@ -130,21 +130,25 @@ class LLMClient:
             return f"❌ Analysis failed: {str(e)}"
     
     def _prepare_email_data(self, emails: List[Dict[str, Any]]) -> str:
-        """Prepare email data for LLM analysis."""
+        """Prepare email data for LLM analysis with aggressive token management."""
         email_summaries = []
         
-        for i, email in enumerate(emails[:50]):  # Limit to 50 emails for token management
+        # Limit to 20 emails for better token management
+        for i, email in enumerate(emails[:20]):
             summary = {
                 "id": i + 1,
-                "date": email.get('date', 'Unknown'),
-                "from": email.get('from', 'Unknown'),
-                "subject": email.get('subject', 'No Subject'),
-                "snippet": email.get('snippet', '')[:200],  # Limit snippet length
-                "body_preview": email.get('body', '')[:300]  # Limit body preview
+                "date": email.get('date', 'Unknown')[:10],  # Just date, no time
+                "from": email.get('from', 'Unknown')[:50],  # Limit sender length
+                "subject": email.get('subject', 'No Subject')[:80],  # Limit subject
+                "snippet": email.get('snippet', '')[:100]  # Shorter snippet
             }
+            # Only include body preview if snippet is short
+            if len(email.get('snippet', '')) < 50:
+                summary["body_preview"] = email.get('body', '')[:150]
+            
             email_summaries.append(summary)
         
-        return json.dumps(email_summaries, indent=2)
+        return json.dumps(email_summaries, indent=1)
     
     def _create_analysis_prompt(self, email_data: str, user_query: str) -> str:
         """Create analysis prompt for LLM."""

@@ -20,8 +20,7 @@ class OAuthManager:
     
     # Gmail API scopes - readonly access for security
     SCOPES = [
-        'https://www.googleapis.com/auth/gmail.readonly',
-        'https://www.googleapis.com/auth/gmail.metadata'
+        'https://www.googleapis.com/auth/gmail.readonly'
     ]
     
     def __init__(self):
@@ -56,17 +55,21 @@ class OAuthManager:
             print(f"{Fore.GREEN}✅ Found credentials file{Style.RESET_ALL}")
             print(f"{Fore.CYAN}🌐 Opening browser for authentication...{Style.RESET_ALL}")
             
-            # Create OAuth2 flow
+            # Create OAuth2 flow with explicit scope enforcement
             flow = InstalledAppFlow.from_client_config(
                 client_config, 
                 self.SCOPES
             )
             
+            # Force fresh authentication by clearing any cached state
+            flow._state = None
+            
             # Run local server for OAuth callback
             # This will open browser and handle the OAuth flow
             credentials = flow.run_local_server(
                 port=0,  # Use random available port
-                prompt='consent',  # Always show consent screen
+                prompt='consent',  # Always show consent screen for fresh auth
+                access_type='offline',  # Request offline access
                 authorization_prompt_message='Please visit this URL to authorize the application: {url}',
                 success_message='Authentication successful! You can close this window.',
                 open_browser=True
